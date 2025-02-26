@@ -3,6 +3,8 @@ import numpy as np
 import os
 from matplotlib import pyplot as plt
 import pickle
+import tkinter as tk
+from tkinter import messagebox
 
 def Prediction(area, perimeter):
     filename = 'model/knn_shrimp_model.sav' # แก้ไขเป็นที่อยู่ของไฟล์โมเดล
@@ -32,7 +34,12 @@ def Shrimp_Detection(image_path):
     area = cv2.contourArea(best_contour)
     perimeter = cv2.arcLength(best_contour, True)
 
-    return area, perimeter
+    # วาดกรอบในภาพ
+    image_with_box = original.copy()
+    cv2.rectangle(image_with_box, (50, 30), (250, 100), (0, 255, 255), 2)  # เปลี่ยนตำแหน่งกรอบตามที่ต้องการ
+
+    return area, perimeter, image_with_box
+
 
 def Capture():
 
@@ -67,14 +74,18 @@ def Capture():
             cv2.imwrite(img_name, frame)
             print(f"{img_name} written!")
             img_counter += 1
-            area, perimeter = Shrimp_Detection(img_name)
+            area, perimeter, image_with_box = Shrimp_Detection(img_name)
             if area is not None and perimeter is not None:
-                print(f"พื้นที่: {area:.2f} พิกเซล")
-                print(f"เส้นรอบวง: {perimeter:.2f} พิกเซล")
                 Pred = Prediction(area, perimeter)
-                print(f"ผลการทำนาย: {Pred[0]}")
+                label = f"Size: {Pred}"
+                cv2.rectangle(image_with_box, (50, 30), (250, 100), (0, 255, 255), -1)
+                cv2.putText(image_with_box, label, (60, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+
+                cv2.imshow("Prediction Result", image_with_box)
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()
             else:
-                print("ไม่สามารถทำนายได้")
+                messagebox.showerror("ข้อผิดพลาด", "ไม่สามารถทำนายได้")
 
     cam.release()
     cv2.destroyAllWindows()
